@@ -68,7 +68,7 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
   scrollOffset = 0;
   flatlistHeight = 0;
   topOffset = 0;
-  scrolling = false;
+  scrollingTrigger = false;
 
   constructor(props: Props<T>) {
     super(props);
@@ -77,14 +77,17 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
 
     const { width } = Dimensions.get("window");
 
-    this.onGestureEvent = event([
-      {
-        nativeEvent: {
-          absoluteY: this.absoluteY,
-          state: this.gestureState
+    this.onGestureEvent = event(
+      [
+        {
+          nativeEvent: {
+            absoluteY: this.absoluteY,
+            state: this.gestureState
+          }
         }
-      }
-    ]);
+      ],
+      { useNativeDriver: true }
+    );
 
     this.rowCenterY = add(this.absoluteY, this.halfRowHeightValue);
 
@@ -118,19 +121,16 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
   }
 
   handleScroll = (rawEvent: ScrollEvent, offsetX: number, offsetY: number) => {
-    console.debug("In handle scroll, _, __, offsetY", offsetY);
     this.scrollOffset = offsetY;
   };
 
-  // handleLayout = (e: LayoutChangeEvent) => {
   handleLayout = (e: LayoutChangeEvent) => {
-    console.debug("In ========= handleLayout, nativeEvent", e.nativeEvent);
     const { height, y } = e.nativeEvent.layout;
     this.flatlistHeight = height;
     this.topOffset = y;
   };
 
-  // Converts and abosolute y value into the index in the array
+  // Converts and absolute y value into the index in the array
   yToIndex = (y: number) =>
     Math.min(
       this.state.dataProvider.getSize() - 1,
@@ -143,7 +143,7 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
     );
 
   moveList = (amount: number) => {
-    if (!this.scrolling) {
+    if (!this.scrollingTrigger) {
       console.debug(
         "moveList, !this.scrolling (not scrolling, not doing anything"
       );
@@ -165,63 +165,56 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
     });
   };
 
-  updateOrder = (y: number) => {
-    const newIdx = this.yToIndex(y);
-    if (this.currIdx !== newIdx) {
-      this.setState({
-        dataProvider: this.state.dataProvider.cloneWithRows(
-          immutableMove(
-            this.state.dataProvider.getAllData(),
-            this.currIdx,
-            newIdx
-          )
-        ),
-        draggingIdx: this.yToIndex(y)
-      });
-      this.currIdx = newIdx;
-    }
-  };
-
-  start = ([y]: { y: number }) => {
-    console.debug("Detected dragging started, y =", y);
+  animatedCodeDragStart = ([y]: { y: number }) => {
     this.currIdx = this.yToIndex(y);
     this.setState({ dragging: true, draggingIdx: this.currIdx });
   };
 
-  reset = () => {
+  animatedCodeReset = () => {
     const newData = this.state.dataProvider.getAllData();
     this.setState({
       dataProvider: this.state.dataProvider.cloneWithRows(newData),
       dragging: false,
       draggingIdx: -1
     });
-    this.scrolling = false;
+    this.scrollingTrigger = false;
     this.currIdx = -1;
     this.props.onSort(newData);
   };
 
-  move = ([y]: { y: number }) => {
-    console.debug(
-      "Detected  move request, y =",
-      y,
-      "flatlistheight =",
-      this.flatlistHeight
-    );
-    // TODO: flatListheight is always set to Zero!!!!
-    if (y + 100 > this.flatlistHeight) {
-      if (!this.scrolling) {
-        this.scrolling = true;
+  animatedCodeRowMoving = ([y]: { y: number }) => {
+    // Do we want to trigger scrolling
+    const scrollOnset = 100;
+    if (y > this.flatlistHeight - scrollOnset) {
+      if (!this.scrollingTrigger) {
+        this.scrollingTrigger = true;
         this.moveList(20);
       }
-    } else if (y < 100) {
-      if (!this.scrolling) {
-        this.scrolling = true;
+    } else if (y < scrollOnset) {
+      if (!this.scrollingTrigger) {
+        this.scrollingTrigger = true;
         this.moveList(-20);
       }
     } else {
-      this.scrolling = false;
+      this.scrollingTrigger = false;
     }
-    this.updateOrder(y);
+
+    // Update both the index the row is over and the data
+    // being shown.
+    const nextIndex = this.yToIndex(y);
+    if (nextIndex !== this.currIdx) {
+      this.setState({
+        dataProvider: this.state.dataProvider.cloneWithRows(
+          immutableMove(
+            this.state.dataProvider.getAllData(),
+            this.currIdx,
+            nextIndex
+          )
+        ),
+        draggingIdx: nextIndex
+      });
+      this.currIdx = nextIndex;
+    }
   };
 
   _rowRenderer = (type, data, index) => {
@@ -248,10 +241,11 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
           {() =>
             cond(
               eq(this.gestureState, State.BEGAN),
-              call([this.absoluteY], this.start)
+              call([this.absoluteY], this.animatedCodeDragStart)
             )
           }
         </Animated.Code>
+
         <Animated.Code>
           {() =>
             cond(
@@ -261,18 +255,26 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
                 eq(this.gestureState, State.FAILED),
                 eq(this.gestureState, State.UNDETERMINED)
               ),
-              call([], this.reset)
+              call([], this.animatedCodeReset)
             )
           }
         </Animated.Code>
+
         <Animated.Code>
           {() =>
             cond(
               eq(this.gestureState, State.ACTIVE),
-              call([this.absoluteY], this.move)
+              call([this.absoluteY], this.animatedCodeRowMoving)
             )
           }
         </Animated.Code>
+
+        {/* If we are not dragging then render list as normal.
+        If we are dragging then we render:
+           1) The list but with the row that is being dragged as the background colour, our case white.
+           2) The row that is being dragged in its own view ontop of the list, i.e. absolute and
+           with a zIndex > than the list
+        */}
         {dragging ? (
           <Animated.View
             style={{

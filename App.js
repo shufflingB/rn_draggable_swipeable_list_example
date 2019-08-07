@@ -20,10 +20,6 @@ const data = Array.from(Array(200), (_, i) => {
   return i;
 });
 
-const FApp = () => {
-  return <Text>Heloo</Text>;
-};
-
 const App = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
