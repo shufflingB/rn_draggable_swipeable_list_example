@@ -142,7 +142,7 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
       )
     );
 
-  moveList = (amount: number) => {
+  moveList = (amountY: number) => {
     if (!this.scrollingTrigger) {
       console.debug(
         "moveList, !this.scrolling (not scrolling, not doing anything"
@@ -156,12 +156,13 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
     }
 
     this.list.current.scrollToOffset(
-      this.scrollOffset + amount,
-      this.scrollOffset + amount,
+      // this.scrollOffset + amount,
+      0,
+      this.scrollOffset + amountY,
       false
     );
     requestAnimationFrame(() => {
-      this.moveList(amount);
+      this.moveList(amountY);
     });
   };
 
