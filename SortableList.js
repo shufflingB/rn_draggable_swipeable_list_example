@@ -26,8 +26,6 @@ interface LayoutChangeEvent {
   };
 }
 
-// import type {LayoutChangeEvent} from "react-native/Libraries/Components/";
-
 function immutableMove(arr, from, to) {
   return arr.reduce((prev, current, idx, self) => {
     if (from === to) {
@@ -63,7 +61,8 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
   onGestureEvent: any;
   halfRowHeightValue: Animated.Value<number>;
 
-  // Holds the current index from the list being dragged, -1 is nothing being dragged.
+  // Holds the row index from the currently rendered list for any row being dragged
+  // -1 if no row is being dragged.
   currIdx = -1;
   scrollOffset = 0;
   flatlistHeight = 0;
