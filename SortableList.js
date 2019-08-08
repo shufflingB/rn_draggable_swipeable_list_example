@@ -48,12 +48,13 @@ function immutableMove(arr, from, to) {
 }
 
 type RState = {
-  dataProvider: typeof DataProvider,
-  dragging: boolean,
-  draggingIdx: number
+  rowsDataProvider: typeof DataProvider,
+  isDraggingRow: boolean,
+  draggingRowIdx: number
 };
 export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
-  list = React.createRef<RecyclerListView<any, any>>();
+  // Hold a reference to the list so that we can trigger updates on it for scrolling.
+  recylerListViewRef = React.createRef<RecyclerListView<any, any>>();
   _layoutProvider: typeof LayoutProvider;
   rowCenterY: Animated.Node<number>;
   absoluteY = new Value(0);
@@ -67,7 +68,7 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
   scrollOffset = 0;
   flatlistHeight = 0;
   topOffset = 0;
-  scrollingTrigger = false;
+  isScrolling = false;
 
   constructor(props: Props<T>) {
     super(props);
@@ -105,16 +106,18 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
     }, props.indexToKey);
 
     this.state = {
-      dataProvider: dataProvider.cloneWithRows(props.data),
-      dragging: false,
-      draggingIdx: -1
+      rowsDataProvider: dataProvider.cloneWithRows(props.data),
+      isDraggingRow: false,
+      draggingRowIdx: -1
     };
   }
 
   componentDidUpdate(prevProps: Props<T>) {
     if (prevProps.data !== this.props.data) {
       this.setState({
-        dataProvider: this.state.dataProvider.cloneWithRows(this.props.data)
+        rowsDataProvider: this.state.rowsDataProvider.cloneWithRows(
+          this.props.data
+        )
       });
     }
   }
@@ -129,10 +132,10 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
     this.topOffset = y;
   };
 
-  // Converts and absolute y value into the index in the array
+  // Converts an absolute y value into the index in the array
   yToIndex = (y: number) =>
     Math.min(
-      this.state.dataProvider.getSize() - 1,
+      this.state.rowsDataProvider.getSize() - 1,
       Math.max(
         0,
         Math.floor(
@@ -141,87 +144,106 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
       )
     );
 
-  moveList = (amountY: number) => {
-    if (!this.scrollingTrigger) {
+  recyclerListComponentScroll = (scrollAmountY: number) => {
+    if (!this.isScrolling) {
+      // Cope with being cancelled on callback
       console.debug(
         "moveList, !this.scrolling (not scrolling, not doing anything"
       );
       return;
     }
 
-    if (this.list.current === null) {
+    if (this.recylerListViewRef.current === null) {
       console.debug("moveList, no this.list.current, not doing anything");
       return;
     }
 
-    this.list.current.scrollToOffset(
+    this.recylerListViewRef.current.scrollToOffset(
       // this.scrollOffset + amount,
       0,
-      this.scrollOffset + amountY,
+      this.scrollOffset + scrollAmountY,
       false
     );
     requestAnimationFrame(() => {
-      this.moveList(amountY);
+      this.recyclerListComponentScroll(scrollAmountY);
     });
-  };
-
-  animatedCodeDragStart = ([y]: { y: number }) => {
-    this.currIdx = this.yToIndex(y);
-    this.setState({ dragging: true, draggingIdx: this.currIdx });
   };
 
   animatedCodeReset = () => {
-    const newData = this.state.dataProvider.getAllData();
+    const newData = this.state.rowsDataProvider.getAllData();
     this.setState({
-      dataProvider: this.state.dataProvider.cloneWithRows(newData),
-      dragging: false,
-      draggingIdx: -1
+      rowsDataProvider: this.state.rowsDataProvider.cloneWithRows(newData),
+      isDraggingRow: false,
+      draggingRowIdx: -1
     });
-    this.scrollingTrigger = false;
+    this.isScrolling = false;
     this.currIdx = -1;
     this.props.onSort(newData);
   };
 
+  animatedCodeRowDragStart = ([y]: { y: number }) => {
+    /*Determine the index of the row that is being dragged and store it so that we
+     * know what row is being moved and can:
+     *   1) Determine what row to show animated above the non-moving rows of the list.
+     *   2) Know where to place a blank placeholder row where the one we are dragging was originally from.
+     *   3) Ultimately figure out how to update the array elements that are being dragged around
+     * */
+
+    this.currIdx = this.yToIndex(y);
+    this.setState({ isDraggingRow: true, draggingRowIdx: this.currIdx });
+  };
+
   animatedCodeRowMoving = ([y]: { y: number }) => {
-    // Do we want to trigger scrolling
+    /*
+     * First up, have we dragged the row sufficiently towards the Bottom or Top of the screen that we should
+     * moving the view port on the list by scrolling Down or Up.
+     */
+
     const scrollOnset = 100;
+
     if (y > this.flatlistHeight - scrollOnset) {
-      if (!this.scrollingTrigger) {
-        this.scrollingTrigger = true;
-        this.moveList(20);
+      // Dragged row towards bottom of screen
+      if (!this.isScrolling) {
+        this.isScrolling = true;
+        this.recyclerListComponentScroll(20); // mv view on list down
       }
     } else if (y < scrollOnset) {
-      if (!this.scrollingTrigger) {
-        this.scrollingTrigger = true;
-        this.moveList(-20);
+      // ... towards top of screen
+      if (!this.isScrolling) {
+        this.isScrolling = true;
+        this.recyclerListComponentScroll(-20); // mv view on list up
       }
     } else {
-      this.scrollingTrigger = false;
+      this.isScrolling = false;
     }
 
-    // Update both the index the row is over and the data
-    // being shown.
-    const nextIndex = this.yToIndex(y);
-    if (nextIndex !== this.currIdx) {
+    /*
+     * Every time the dragged row moves over its immediate (above or below) neighbouring row update:
+     * 1) The underlying data list order.
+     * 2) Our references to what is being dragged in that list.
+     */
+    const draggedRowOverListIdx = this.yToIndex(y);
+    if (draggedRowOverListIdx !== this.currIdx) {
       this.setState({
-        dataProvider: this.state.dataProvider.cloneWithRows(
+        rowsDataProvider: this.state.rowsDataProvider.cloneWithRows(
           immutableMove(
-            this.state.dataProvider.getAllData(),
+            this.state.rowsDataProvider.getAllData(),
             this.currIdx,
-            nextIndex
+            draggedRowOverListIdx
           )
         ),
-        draggingIdx: nextIndex
+        draggingRowIdx: draggedRowOverListIdx
       });
-      this.currIdx = nextIndex;
+      this.currIdx = draggedRowOverListIdx;
     }
   };
 
   _rowRenderer = (type, data, index) => {
+    // Render the row if it's not being dragged, else render a filler placeholder
     return this.props.renderRow(
       data,
       index,
-      this.state.draggingIdx === index ? "placeholder" : "normal",
+      this.state.draggingRowIdx === index ? "placeholder" : "normal",
       <PanGestureHandler
         maxPointers={1}
         onGestureEvent={this.onGestureEvent}
@@ -233,19 +255,8 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
   };
 
   render() {
-    const { dataProvider, dragging, draggingIdx } = this.state;
-
     return (
       <>
-        <Animated.Code>
-          {() =>
-            cond(
-              eq(this.gestureState, State.BEGAN),
-              call([this.absoluteY], this.animatedCodeDragStart)
-            )
-          }
-        </Animated.Code>
-
         <Animated.Code>
           {() =>
             cond(
@@ -256,6 +267,15 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
                 eq(this.gestureState, State.UNDETERMINED)
               ),
               call([], this.animatedCodeReset)
+            )
+          }
+        </Animated.Code>
+
+        <Animated.Code>
+          {() =>
+            cond(
+              eq(this.gestureState, State.BEGAN),
+              call([this.absoluteY], this.animatedCodeRowDragStart)
             )
           }
         </Animated.Code>
@@ -275,7 +295,7 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
            2) The row that is being dragged in its own view ontop of the list, i.e. absolute and
            with a zIndex > than the list
         */}
-        {dragging ? (
+        {this.state.isDraggingRow ? (
           <Animated.View
             style={{
               top: this.rowCenterY,
@@ -286,8 +306,10 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
             }}
           >
             {this.props.renderRow(
-              dataProvider.getDataForIndex(draggingIdx),
-              draggingIdx,
+              this.state.rowsDataProvider.getDataForIndex(
+                this.state.draggingRowIdx
+              ),
+              this.state.draggingRowIdx,
               "dragging",
               this.props.renderDragHandle()
             )}
@@ -295,12 +317,12 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
         ) : null}
 
         <RecyclerListView
-          ref={this.list}
+          ref={this.recylerListViewRef}
           style={{ flex: 1 }}
           onScroll={this.handleScroll}
           onLayout={this.handleLayout}
           layoutProvider={this._layoutProvider}
-          dataProvider={dataProvider}
+          dataProvider={this.state.rowsDataProvider}
           rowRenderer={this._rowRenderer}
           extendedState={{ dragging: true }}
         />
