@@ -4,6 +4,8 @@ import * as React from "react";
 import { SafeAreaView, StatusBar, Text, View, StyleSheet } from "react-native";
 import { SortableList } from "./SortableList";
 import { RectButton } from "react-native-gesture-handler";
+import AppleStyleSwipeableRow from "./AppleStyleSwipeableRow";
+import type { ViewStyle } from "react-native/Libraries/StyleSheet/StyleSheet";
 
 const TEST_DATA = [
   {
@@ -100,44 +102,61 @@ function getRandomColor() {
 const data = TEST_DATA;
 
 const Row = ({ item }) => (
-  <RectButton style={styles.rectButton} onPress={() => alert(item.from)}>
-    <Text style={styles.fromText}>{item.from}</Text>
-    <Text numberOfLines={2} style={styles.messageText}>
-      {item.message}
-    </Text>
-    <Text style={styles.dateText}>
-      {item.when} {"❭"}
-    </Text>
-  </RectButton>
+  <AppleStyleSwipeableRow>
+    <RectButton style={styles.rectButton} onPress={() => alert(item.from)}>
+      <Text style={styles.fromText}>{item.from}</Text>
+      <Text numberOfLines={2} style={styles.messageText}>
+        {item.message}
+      </Text>
+      <Text style={styles.dateText}>
+        {item.when} {"❭"}
+      </Text>
+    </RectButton>
+  </AppleStyleSwipeableRow>
 );
 
+const rowHeight = 100;
 const App = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <SortableList
         data={data}
         onSort={x => console.log(x)}
-        rowHeight={100}
+        rowHeight={rowHeight}
         indexToKey={idx => idx.toString()}
         renderDragHandle={() => <Text style={{ fontSize: 32 }}>@</Text>}
-        renderRow={(dataItem, dataItemIdx, state, dragHandle) => {
+        renderRow={(
+          dataItem,
+          dataItemIdx,
+          dataItemState,
+          dataItemDragHandle
+        ) => {
           return (
             <View
-              style={{
-                padding: 16,
-                backgroundColor: state === "dragging" ? "#f2f2f2" : "grey",
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                opacity: state === "placeholder" ? 0 : 1
-              }}
+              style={
+                dataItemState === "dragging"
+                  ? styles.rowDragging
+                  : dataItemState === "placeholder"
+                  ? styles.rowPlaceholder
+                  : styles.row
+              }
               // onLayout={onLayout}
             >
-              {dragHandle}
-              <Row item={dataItem} />
-              {/*<Text style={{ fontSize: 18, textAlign: "center", flex: 1 }}>*/}
-              {/*  {data.from}*/}
-              {/*</Text>*/}
+              {dataItemDragHandle}
+              <AppleStyleSwipeableRow>
+                <RectButton
+                  style={styles.rectButton}
+                  onPress={() => alert(dataItem.from)}
+                >
+                  <Text style={styles.fromText}>{dataItem.from}</Text>
+                  <Text numberOfLines={2} style={styles.messageText}>
+                    {dataItem.message}
+                  </Text>
+                  <Text style={styles.dateText}>
+                    {dataItem.when} {"❭"}
+                  </Text>
+                </RectButton>
+              </AppleStyleSwipeableRow>
             </View>
           );
         }}
@@ -145,55 +164,40 @@ const App = () => {
     </SafeAreaView>
   );
 };
-/*
-const BApp = () => {
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <SortableList
-        data={data}
-        onSort={x => console.log(x)}
-        rowHeight={70}
-        indexToKey={idx => "" + data[idx]}
-        renderDragHandle={() => <Text style={{ fontSize: 32 }}>@</Text>}
-        renderRow={(data, index, state, dragHandle) => {
-          return (
-            <View
-              style={{
-                padding: 16,
-                backgroundColor:
-                  state === "dragging" ? "#f2f2f2" : colorMap[data],
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                opacity: state === "placeholder" ? 0 : 1
-              }}
-              // onLayout={onLayout}
-            >
-              {dragHandle}
-              <Text style={{ fontSize: 18, textAlign: "center", flex: 1 }}>
-                {data}
-              </Text>
-            </View>
-          );
-        }}
-      />
-    </SafeAreaView>
-  );
+
+const viewStyleRow: ViewStyle = {
+  height: rowHeight,
+  padding: 16,
+  backgroundColor: "grey",
+  display: "flex",
+  flexDirection: "row",
+  alignItems: "center",
+  opacity: 1,
+  borderColor: "red",
+  borderWidth: 1
 };
-*/
+const viewStyleRowBeingDragged: ViewStyle = {
+  ...viewStyleRow,
+  backgroundColor: "purple"
+};
+const viewStyleRowPlaceholderInList = {
+  ...viewStyleRow,
+  opacity: 0 // Hide any text it contains so as not to conflict with what's being dragged.
+};
+
 const styles = StyleSheet.create({
+  row: viewStyleRow,
+  rowDragging: viewStyleRowBeingDragged,
+  rowPlaceholder: viewStyleRowPlaceholderInList,
   rectButton: {
     flex: 1,
-    height: 80,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    height: rowHeight - 9,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
     justifyContent: "space-between",
     flexDirection: "column",
-    backgroundColor: "white"
-  },
-  separator: {
-    backgroundColor: "rgb(200, 199, 204)",
-    height: StyleSheet.hairlineWidth
+    borderWidth: 2,
+    backgroundColor: "lightgrey"
   },
   fromText: {
     fontWeight: "bold",

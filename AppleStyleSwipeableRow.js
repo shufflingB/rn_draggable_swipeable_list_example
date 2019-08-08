@@ -1,15 +1,22 @@
-import React, { Component } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+// @flow
+import * as React from "react";
+import { Animated, StyleSheet, Text, View } from "react-native";
 
-import { RectButton } from 'react-native-gesture-handler';
+import { RectButton } from "react-native-gesture-handler";
 
-import Swipeable from 'react-native-gesture-handler/Swipeable';
+import Swipeable from "react-native-gesture-handler/Swipeable";
 
-export default class AppleStyleSwipeableRow extends Component {
+type State = {};
+export default class AppleStyleSwipeableRow extends React.Component<
+  Props,
+  State
+> {
+  _swipeableRowRef;
+
   renderLeftActions = (progress, dragX) => {
     const trans = dragX.interpolate({
       inputRange: [0, 50, 100, 101],
-      outputRange: [-20, 0, 0, 1],
+      outputRange: [-20, 0, 0, 1]
     });
     return (
       <RectButton style={styles.leftAction} onPress={this.close}>
@@ -17,18 +24,19 @@ export default class AppleStyleSwipeableRow extends Component {
           style={[
             styles.actionText,
             {
-              transform: [{ translateX: trans }],
-            },
-          ]}>
+              transform: [{ translateX: trans }]
+            }
+          ]}
+        >
           Archive
         </Animated.Text>
       </RectButton>
     );
   };
-  renderRightAction = (text, color, x, progress) => {
+  renderRightAction = (text: string, color, x, progress) => {
     const trans = progress.interpolate({
       inputRange: [0, 1],
-      outputRange: [x, 0],
+      outputRange: [x, 0]
     });
     const pressHandler = () => {
       this.close();
@@ -38,36 +46,46 @@ export default class AppleStyleSwipeableRow extends Component {
       <Animated.View style={{ flex: 1, transform: [{ translateX: trans }] }}>
         <RectButton
           style={[styles.rightAction, { backgroundColor: color }]}
-          onPress={pressHandler}>
+          onPress={pressHandler}
+        >
           <Text style={styles.actionText}>{text}</Text>
         </RectButton>
       </Animated.View>
     );
   };
-  renderRightActions = progress => (
-    <View style={{ width: 192, flexDirection: 'row' }}>
-      {this.renderRightAction('More', '#C8C7CD', 192, progress)}
-      {this.renderRightAction('Flag', '#ffab00', 128, progress)}
-      {this.renderRightAction('More', '#dd2c00', 64, progress)}
+  renderRightActions = (progress: number) => (
+    <View style={{ width: 192, flexDirection: "row" }}>
+      {this.renderRightAction("More", "#C8C7CD", 192, progress)}
+      {this.renderRightAction("Flag", "#ffab00", 128, progress)}
+      {this.renderRightAction("More", "#dd2c00", 64, progress)}
     </View>
   );
-  updateRef = ref => {
-    this._swipeableRow = ref;
+  updateRef = (ref: any) => {
+    this._swipeableRowRef = ref;
   };
   close = () => {
-    this._swipeableRow.close();
+    this._swipeableRowRef.close();
   };
   render() {
-    const { children } = this.props;
     return (
       <Swipeable
+        childrenContainerStyle={{
+          flex: 1,
+          height: 90,
+          borderColor: "pink",
+          justifyContent: "space-between",
+          flexDirection: "column",
+          borderWidth: 2,
+          backgroundColor: "lightgrey"
+        }}
         ref={this.updateRef}
         friction={2}
         leftThreshold={30}
         rightThreshold={40}
         renderLeftActions={this.renderLeftActions}
-        renderRightActions={this.renderRightActions}>
-        {children}
+        renderRightActions={this.renderRightActions}
+      >
+        {this.props.children}
       </Swipeable>
     );
   }
@@ -76,18 +94,20 @@ export default class AppleStyleSwipeableRow extends Component {
 const styles = StyleSheet.create({
   leftAction: {
     flex: 1,
-    backgroundColor: '#497AFC',
-    justifyContent: 'center',
+    backgroundColor: "#497AFC",
+    justifyContent: "center"
   },
   actionText: {
-    color: 'white',
+    color: "white",
     fontSize: 16,
-    backgroundColor: 'transparent',
-    padding: 10,
+    backgroundColor: "transparent",
+    padding: 10
   },
   rightAction: {
-    alignItems: 'center',
     flex: 1,
-    justifyContent: 'center',
-  },
+    alignItems: "center",
+    justifyContent: "center"
+  }
 });
+
+type Props = { children: React.Node };

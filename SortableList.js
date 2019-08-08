@@ -336,10 +336,10 @@ type Props<T> = {
   data: Array<T>,
   indexToKey: (index: number) => string,
   renderRow: (
-    data: T,
-    index: number,
-    state: "normal" | "dragging" | "placeholder",
-    dragHandle: React.Node
+    dataItem: T,
+    dataItemIndex: number,
+    dataItemState: "normal" | "dragging" | "placeholder",
+    dataItemDragHandle: React.Node
   ) => React.Node | null,
   renderDragHandle: () => React.Node,
   onSort: (newData: Array<T>) => void
