@@ -5,12 +5,11 @@ import { Animated, StyleSheet, Text, View } from "react-native";
 import { RectButton } from "react-native-gesture-handler";
 
 import Swipeable from "react-native-gesture-handler/Swipeable";
+import type { dataItem } from "./App";
+import type { ViewStyle } from "react-native/Libraries/StyleSheet/StyleSheet";
 
 type State = {};
-export default class AppleStyleSwipeableRow extends React.Component<
-  Props,
-  State
-> {
+export default class SwipeableRow extends React.Component<Props, State> {
   _swipeableRowRef;
 
   renderLeftActions = (progress, dragX) => {
@@ -69,29 +68,61 @@ export default class AppleStyleSwipeableRow extends React.Component<
   render() {
     return (
       <Swipeable
-        childrenContainerStyle={{
-          flex: 1,
-          height: 90,
-          borderColor: "pink",
-          justifyContent: "space-between",
-          flexDirection: "column",
-          borderWidth: 2,
-          backgroundColor: "lightgrey"
-        }}
+        containerStyle={this.props.style}
         ref={this.updateRef}
         friction={2}
-        leftThreshold={30}
+        leftThreshold={50}
         rightThreshold={40}
         renderLeftActions={this.renderLeftActions}
         renderRightActions={this.renderRightActions}
       >
-        {this.props.children}
+        <RectButton onPress={() => alert(this.props.dataItem.from)}>
+          <View accessible>
+            <View style={styles.messageStatusLine}>
+              <Text style={styles.fromText}>{this.props.dataItem.from}</Text>
+              <Text style={styles.dateText}>
+                {this.props.dataItem.when} {"❭"}
+              </Text>
+            </View>
+
+            <Text numberOfLines={3} style={styles.messageText}>
+              {this.props.dataItem.message}
+            </Text>
+          </View>
+        </RectButton>
       </Swipeable>
     );
   }
 }
 
 const styles = StyleSheet.create({
+  viewAccessible: {
+    flex: 1,
+    padding: 5,
+    minHeight: 90,
+    justifyContent: "space-between",
+    flexDirection: "column",
+    borderWidth: 2,
+    backgroundColor: "lightgrey"
+  },
+
+  messageStatusLine: {
+    flexDirection: "row",
+    justifyContent: "space-between"
+  },
+  fromText: {
+    fontWeight: "bold",
+    backgroundColor: "transparent"
+  },
+  dateText: {
+    backgroundColor: "transparent",
+    color: "#999",
+    fontWeight: "bold"
+  },
+  messageText: {
+    color: "#999",
+    backgroundColor: "transparent"
+  },
   leftAction: {
     flex: 1,
     backgroundColor: "#497AFC",
@@ -110,4 +141,4 @@ const styles = StyleSheet.create({
   }
 });
 
-type Props = { children: React.Node };
+type Props = { dataItem: dataItem, style: ViewStyle };

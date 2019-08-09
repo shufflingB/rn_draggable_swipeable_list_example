@@ -1,13 +1,20 @@
 // @flow
 
-import * as React from "react";
-import { SafeAreaView, StatusBar, Text, View, StyleSheet } from "react-native";
-import { SortableList } from "./SortableList";
-import { RectButton } from "react-native-gesture-handler";
-import AppleStyleSwipeableRow from "./AppleStyleSwipeableRow";
-import type { ViewStyle } from "react-native/Libraries/StyleSheet/StyleSheet";
+import * as React from 'react';
+import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { SortableList } from './SortableList';
+import SwipeableRow from './SwipeableRow';
+import type { ViewStyle } from 'react-native/Libraries/StyleSheet/StyleSheet';
+// import Icon from 'react-native-vector-icons/FontAwesome';
+// const myIcon = <Icon name="rocket" size={30} color="#900" />;
 
-const TEST_DATA = [
+export type dataItem = {
+  from: string,
+  when: string,
+  message: string
+};
+
+const TEST_DATA: Array<dataItem> = [
   {
     from: "D'Artagnan",
     when: "3:11 PM",
@@ -88,34 +95,9 @@ const TEST_DATA = [
   }
 ];
 
-const colorMap = {};
-
-function getRandomColor() {
-  var letters = "0123456789ABCDEF";
-  var color = "#";
-  for (var i = 0; i < 6; i++) {
-    color += letters[Math.floor(Math.random() * 16)];
-  }
-  return color;
-}
-
 const data = TEST_DATA;
-
-const Row = ({ item }) => (
-  <AppleStyleSwipeableRow>
-    <RectButton style={styles.rectButton} onPress={() => alert(item.from)}>
-      <Text style={styles.fromText}>{item.from}</Text>
-      <Text numberOfLines={2} style={styles.messageText}>
-        {item.message}
-      </Text>
-      <Text style={styles.dateText}>
-        {item.when} {"❭"}
-      </Text>
-    </RectButton>
-  </AppleStyleSwipeableRow>
-);
-
 const rowHeight = 100;
+
 const App = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -125,6 +107,7 @@ const App = () => {
         rowHeight={rowHeight}
         indexToKey={idx => idx.toString()}
         renderDragHandle={() => <Text style={{ fontSize: 32 }}>@</Text>}
+        // renderDragHandle={() => <Icon name="rocket" size={30} color="#900" />}
         renderRow={(
           dataItem,
           dataItemIdx,
@@ -143,20 +126,7 @@ const App = () => {
               // onLayout={onLayout}
             >
               {dataItemDragHandle}
-              <AppleStyleSwipeableRow>
-                <RectButton
-                  style={styles.rectButton}
-                  onPress={() => alert(dataItem.from)}
-                >
-                  <Text style={styles.fromText}>{dataItem.from}</Text>
-                  <Text numberOfLines={2} style={styles.messageText}>
-                    {dataItem.message}
-                  </Text>
-                  <Text style={styles.dateText}>
-                    {dataItem.when} {"❭"}
-                  </Text>
-                </RectButton>
-              </AppleStyleSwipeableRow>
+              <SwipeableRow dataItem={dataItem} style={styles.swipeable} />
             </View>
           );
         }}
@@ -167,54 +137,35 @@ const App = () => {
 
 const viewStyleRow: ViewStyle = {
   height: rowHeight,
-  padding: 16,
-  backgroundColor: "grey",
   display: "flex",
   flexDirection: "row",
   alignItems: "center",
   opacity: 1,
-  borderColor: "red",
-  borderWidth: 1
+  borderColor: "lightgrey",
+  borderTopWidth: 0.5
 };
+
 const viewStyleRowBeingDragged: ViewStyle = {
   ...viewStyleRow,
   backgroundColor: "purple"
 };
-const viewStyleRowPlaceholderInList = {
+
+const viewStyleRowPlaceholderInList: ViewStyle = {
   ...viewStyleRow,
   opacity: 0 // Hide any text it contains so as not to conflict with what's being dragged.
+};
+
+const viewStyleSwipeable: ViewStyle = {
+  flex: 1,
+  height: "100%",
+  padding: 10
 };
 
 const styles = StyleSheet.create({
   row: viewStyleRow,
   rowDragging: viewStyleRowBeingDragged,
   rowPlaceholder: viewStyleRowPlaceholderInList,
-  rectButton: {
-    flex: 1,
-    height: rowHeight - 9,
-    paddingVertical: 0,
-    paddingHorizontal: 0,
-    justifyContent: "space-between",
-    flexDirection: "column",
-    borderWidth: 2,
-    backgroundColor: "lightgrey"
-  },
-  fromText: {
-    fontWeight: "bold",
-    backgroundColor: "transparent"
-  },
-  messageText: {
-    color: "#999",
-    backgroundColor: "transparent"
-  },
-  dateText: {
-    backgroundColor: "transparent",
-    position: "absolute",
-    right: 20,
-    top: 10,
-    color: "#999",
-    fontWeight: "bold"
-  }
+  swipeable: viewStyleSwipeable
 });
 
 export default App;
