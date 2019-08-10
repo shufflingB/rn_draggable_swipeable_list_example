@@ -32,7 +32,7 @@ export default class SwipeableRow extends React.Component<Props, State> {
       </RectButton>
     );
   };
-  renderRightAction = (text: string, color, x, progress) => {
+  renderRightAction = (text: string, color: string, x: number, number) => {
     const trans = progress.interpolate({
       inputRange: [0, 1],
       outputRange: [x, 0]
@@ -96,16 +96,6 @@ export default class SwipeableRow extends React.Component<Props, State> {
 }
 
 const styles = StyleSheet.create({
-  viewAccessible: {
-    flex: 1,
-    padding: 5,
-    minHeight: 90,
-    justifyContent: "space-between",
-    flexDirection: "column",
-    borderWidth: 2,
-    backgroundColor: "lightgrey"
-  },
-
   messageStatusLine: {
     flexDirection: "row",
     justifyContent: "space-between"

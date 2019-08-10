@@ -1,12 +1,11 @@
 // @flow
 
-import * as React from 'react';
-import { SafeAreaView, StyleSheet, Text, View } from 'react-native';
-import { SortableList } from './SortableList';
-import SwipeableRow from './SwipeableRow';
-import type { ViewStyle } from 'react-native/Libraries/StyleSheet/StyleSheet';
-// import Icon from 'react-native-vector-icons/FontAwesome';
-// const myIcon = <Icon name="rocket" size={30} color="#900" />;
+import * as React from "react";
+import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { SortableList } from "./SortableList";
+import SwipeableRow from "./SwipeableRow";
+import type { ViewStyle } from "react-native/Libraries/StyleSheet/StyleSheet";
+import IconIonicons from "react-native-vector-icons/Ionicons";
 
 export type dataItem = {
   from: string,
@@ -106,8 +105,10 @@ const App = () => {
         onSort={x => console.log(x)}
         rowHeight={rowHeight}
         indexToKey={idx => idx.toString()}
-        renderDragHandle={() => <Text style={{ fontSize: 32 }}>@</Text>}
-        // renderDragHandle={() => <Icon name="rocket" size={30} color="#900" />}
+        // renderDragHandle={() => <Text style={{ fontSize: 32 }}>@</Text>}
+        renderDragHandle={() => (
+          <IconIonicons name="ios-reorder" size={30} color="lightgrey" />
+        )}
         renderRow={(
           dataItem,
           dataItemIdx,
@@ -123,10 +124,9 @@ const App = () => {
                   ? styles.rowPlaceholder
                   : styles.row
               }
-              // onLayout={onLayout}
             >
-              {dataItemDragHandle}
               <SwipeableRow dataItem={dataItem} style={styles.swipeable} />
+              {dataItemDragHandle}
             </View>
           );
         }}
@@ -142,12 +142,19 @@ const viewStyleRow: ViewStyle = {
   alignItems: "center",
   opacity: 1,
   borderColor: "lightgrey",
-  borderTopWidth: 0.5
+  borderWidth: 0.5,
+  backgroundColor: "white",
+  padding: 10
 };
 
+const elevation = 10;
 const viewStyleRowBeingDragged: ViewStyle = {
   ...viewStyleRow,
-  backgroundColor: "purple"
+  shadowColor: "black",
+  shadowOffset: { width: 0, height: 0.5 * elevation },
+  shadowOpacity: 0.3,
+  shadowRadius: 0.8 * elevation,
+  opacity: 1
 };
 
 const viewStyleRowPlaceholderInList: ViewStyle = {
