@@ -301,7 +301,7 @@ export default class Swipeable extends Component<PropType, StateType> {
 
         xAnimateToOffset = this._defaultActionTriggered
           ? 0
-          : translationX < -rightThreshold
+          : translationX > rightThreshold
           ? 0
           : -rightMenuWidth;
 
