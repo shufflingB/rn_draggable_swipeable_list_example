@@ -88,18 +88,13 @@ export default class SwipeableRow extends React.Component<Props, State> {
    * default will be triggered by ceasing to move any further right even as the rest of the menu continues to extend.
    * 5) The menu is closed by either dragging to the LHS past the menu close threshold or by dragging past the trigger
    * default action threshold.
-   *
-   *
    */
-
   leftAppleStyleActionMenuRender(
     progress: Animated.Value,
     dragX: Animated.Value
   ) {
-    const screenWidth = widthPercentageToDP(100);
     const dragXMenuClosed = 0;
     const dragXMenuOpen = ACTION_BTN_WIDTH;
-
     const xButtonMenuClosed = -ACTION_BTN_WIDTH;
     const xButtonMenuOpen = 0;
 
@@ -111,15 +106,10 @@ export default class SwipeableRow extends React.Component<Props, State> {
       inputRange: [
         dragXMenuClosed,
         DEFAULT_ACTION_THRESHOLD - DEFAULT_ACTION_THRESHOLD_ANIMATION_OFFSET,
-        DEFAULT_ACTION_THRESHOLD,
-        screenWidth
+        DEFAULT_ACTION_THRESHOLD
       ],
-      outputRange: [
-        0,
-        0,
-        DEFAULT_ACTION_THRESHOLD - ACTION_BTN_WIDTH,
-        screenWidth - ACTION_BTN_WIDTH
-      ]
+      outputRange: [0, 0, DEFAULT_ACTION_THRESHOLD - ACTION_BTN_WIDTH],
+      extrapolate: "clamp"
     });
 
     const colorButton = SWIPEABLE_LH_ACTION_BUTTONS[0].color;
@@ -160,9 +150,9 @@ export default class SwipeableRow extends React.Component<Props, State> {
     );
   }
 
-  /*
-   *
-   * */
+  /**
+   * Pass to Swipeable as the Right menu to render a single button Apple style action menu.
+   */
   rightAppleStylelActionMenuRender = (
     progress: Animated.Value,
     dragX: Animated.Value
@@ -174,55 +164,59 @@ export default class SwipeableRow extends React.Component<Props, State> {
     const renderActionButton = (buttonConfigIdx: number) => {
       const buttonConfig = SWIPEABLE_RH_ACTION_BUTTONS[buttonConfigIdx];
       const zIndex = SWIPEABLE_RH_ACTION_BUTTONS.length - buttonConfigIdx;
-      const screenWidth = widthPercentageToDP(100);
-      const hiddenButtonWidth = screenWidth;
 
       console.debug("buttonConfig ", buttonConfig);
       const dragXMenuClosed = 0;
       const dragXMenuOpen =
         -SWIPEABLE_RH_ACTION_BUTTONS.length * ACTION_BTN_WIDTH;
 
-      const xButtonFromEndMenuOpen =
-        -buttonConfigIdx * ACTION_BTN_WIDTH + hiddenButtonWidth;
-      const xButtonFromEndMenuClosed = ACTION_BTN_WIDTH + hiddenButtonWidth;
+      const xButtonFromEndMenuOpen = 0;
+      const xButtonFromEndMenuClosed = (buttonConfigIdx + 1) * ACTION_BTN_WIDTH;
       console.debug("offset = ", xButtonFromEndMenuOpen);
 
-      const xAbsoluteForButton =
+      const xForActionButtonInsideMenu =
         buttonConfigIdx === SWIPEABLE_DEFAULT_ACTION_IDX
           ? dragX.interpolate({
               inputRange: [
-                -screenWidth,
-                -DEFAULT_ACTION_THRESHOLD,
+                // -DEFAULT_ACTION_THRESHOLD,
                 dragXMenuOpen,
                 dragXMenuClosed
               ],
               outputRange: [
-                ACTION_BTN_WIDTH,
-                -DEFAULT_ACTION_THRESHOLD +
-                  ACTION_BTN_WIDTH +
-                  hiddenButtonWidth,
+                // -DEFAULT_ACTION_THRESHOLD,
                 xButtonFromEndMenuOpen,
                 xButtonFromEndMenuClosed
-              ],
-              extrapolate: "clamp"
+              ]
+              // extrapolate: "clamp"
             })
           : dragX.interpolate({
               inputRange: [dragXMenuOpen, dragXMenuClosed],
               outputRange: [xButtonFromEndMenuOpen, xButtonFromEndMenuClosed]
+              // extrapolate: "clamp"
             });
+
+      const scaleXForActionButtonInsideMenu = dragX.interpolate({
+        inputRange: [-DEFAULT_ACTION_THRESHOLD, dragXMenuOpen, dragXMenuClosed],
+        outputRange: [
+          (DEFAULT_ACTION_THRESHOLD + dragXMenuOpen) / 3,
+          1,
+          1
+        ]
+      });
 
       return (
         <Animated.View
           style={{
-            width: ACTION_BTN_WIDTH + hiddenButtonWidth,
-            height: "100%",
+            width: ACTION_BTN_WIDTH,
             zIndex: zIndex,
-            position: "absolute", // Keep things sane when it comes to over laying the buttons
             transform: [
               {
-                translateX: xAbsoluteForButton
-              }
-            ]
+                translateX: xForActionButtonInsideMenu
+              },
+              { scaleX: scaleXForActionButtonInsideMenu }
+            ],
+            borderColor: "black",
+            borderWidth: 1
           }}
         >
           <RectButton
@@ -249,10 +243,11 @@ export default class SwipeableRow extends React.Component<Props, State> {
       <View
         style={{
           flex: 1,
-          flexDirection: "row-reverse"
-          // borderColor: "black",
-          // backgroundColor: "yellow",
-          // borderWidth: 1
+          flexDirection: "row-reverse",
+          borderColor: "black",
+          backgroundColor: "yellow",
+          borderWidth: 1
+          // width: ACTION_BTN_WIDTH * 3
         }}
       >
         {renderActionButton(0)}
@@ -372,3 +367,82 @@ type Props = {
   rowContainer: ViewStyle,
   rowSwipedContent: ViewStyle
 };
+
+//
+// /**
+//  * Pass to Swipeable as the Right menu to render a single button Apple style action menu.
+//  */
+// rightAppleStylelActionMenuRender = (
+//   progress: Animated.Value,
+//   dragX: Animated.Value
+// ) => {
+//   /*
+//    * render a single action button
+//    * */
+//
+//   const renderActionButton = (buttonConfigIdx: number) => {
+//     const buttonConfig = SWIPEABLE_RH_ACTION_BUTTONS[buttonConfigIdx];
+//
+//     console.debug("buttonConfig ", buttonConfig);
+//     const dragXMenuClosed = 0;
+//     const dragXMenuOpen =
+//       -SWIPEABLE_RH_ACTION_BUTTONS.length * ACTION_BTN_WIDTH;
+//
+//     const xButtonFromEndMenuOpen = 0;
+//     const xButtonFromEndMenuClosed = (buttonConfigIdx + 1) * ACTION_BTN_WIDTH;
+//     console.debug("offset = ", xButtonFromEndMenuOpen);
+//
+//     const xForActionButtonInsideMenu =
+//       buttonConfigIdx === SWIPEABLE_DEFAULT_ACTION_IDX
+//         ? dragX.interpolate({
+//           inputRange: [
+//             // -DEFAULT_ACTION_THRESHOLD,
+//             dragXMenuOpen,
+//             dragXMenuClosed
+//           ],
+//           outputRange: [
+//             // -DEFAULT_ACTION_THRESHOLD,
+//             xButtonFromEndMenuOpen,
+//             xButtonFromEndMenuClosed
+//           ]
+//           // extrapolate: "clamp"
+//         })
+//         : dragX.interpolate({
+//           inputRange: [dragXMenuOpen, dragXMenuClosed],
+//           outputRange: [xButtonFromEndMenuOpen, xButtonFromEndMenuClosed]
+//           // extrapolate: "clamp"
+//         });
+//
+//     return (
+//       <Animated.View
+//         style={{
+//           minWidth: ACTION_BTN_WIDTH,
+//           transform: [
+//             {
+//               translateX: xForActionButtonInsideMenu
+//             }
+//             // { scaleX: scaleXForActionButtonInsideMenu }
+//           ]
+//           // borderColor: "black",
+//           // borderWidth: 1
+//         }}
+//       >
+//         <RectButton
+//           style={{
+//             flex: 1,
+//             backgroundColor: buttonConfig.color,
+//             justifyContent: "center"
+//           }}
+//           onPress={() =>
+//             this.actionButtonPressHandler(
+//               `Pressed action button ${buttonConfig.text}`
+//             )
+//           }
+//         >
+//           <Text style={styles.actionText}>{buttonConfig.text}</Text>
+//         </RectButton>
+//       </Animated.View>
+//     );
+//   };
+//
+//

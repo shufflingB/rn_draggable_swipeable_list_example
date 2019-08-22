@@ -524,7 +524,8 @@ type foo = { [string]: ViewStyle | TextStyle };
 
 const styles = StyleSheet.create({
   rowContainer: {
-    overflow: "hidden"
+    overflow: "hidden",
+    width: "100%"
   },
   rowSwipedContent: {
     width: "100%",

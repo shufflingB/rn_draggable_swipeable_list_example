@@ -5175,6 +5175,11 @@ react-native-gesture-handler@^1.3.0:
     invariant "^2.2.2"
     prop-types "^15.5.10"
 
+react-native-haptic-feedback@^1.8.2:
+  version "1.8.2"
+  resolved "https://registry.yarnpkg.com/react-native-haptic-feedback/-/react-native-haptic-feedback-1.8.2.tgz#532dfcdfe2eaaaf3c30ff5dff97973ff05399fcd"
+  integrity sha512-arY2vsQtcF6Z/HggcfASTFzXm5HLUvK08rj6xPs6b95mpUDyStxEoC2c6MCFx+GSqnpBuOQvQCf42Zp0ATnWoQ==
+
 react-native-reanimated@^1.1.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/react-native-reanimated/-/react-native-reanimated-1.1.0.tgz#ba6864055ec3a206cdd5209a293fe653ce276206"
@@ -5240,11 +5245,6 @@ react-refresh@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/react-refresh/-/react-refresh-0.2.0.tgz#f0cff375e8f75dea7133a847a1b40cf5c073dd0d"
   integrity sha512-ITw8t/HOFNose2yf1y9pPFSSeB9ISOq2JdHpuZvj/Qb+iSsLml8GkkHdDlURzieO7B3dFDtMrrneZLl3N5z/hg==
-
-react-rendered-size@^1.1.1:
-  version "1.1.1"
-  resolved "https://registry.yarnpkg.com/react-rendered-size/-/react-rendered-size-1.1.1.tgz#67025eaa0ddd32e63d86726c3a3bba20741bd403"
-  integrity sha512-XOuj2NXeKzgvQahTWuT/6rfeXhZhgTsk+cqmuytkKwysQJTTh8uZUhEsWT6D07UJ/HtsG31g/Uv/xvbmCQcOVQ==
 
 react-test-renderer@16.8.6:
   version "16.8.6"
