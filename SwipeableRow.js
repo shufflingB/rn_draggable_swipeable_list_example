@@ -50,18 +50,19 @@ const SWIPEABLE_RH_ACTION_BUTTONS: Array<actionButtonDef> = [
     color: "#dd2c00"
   },
   {
-    text: "More",
-    color: "#C8C7CD"
-  },
-  {
     text: "Flag",
     color: "#ffab00"
+  },
+  {
+    text: "More",
+    color: "#C8C7CD"
   }
 ];
 
 type State = {
   actionMenuOpenOnSide: "left" | "right" | "neither"
 };
+
 export default class SwipeableRow extends React.Component<Props, State> {
   state: State = {
     actionMenuOpenOnSide: "neither"
@@ -74,10 +75,24 @@ export default class SwipeableRow extends React.Component<Props, State> {
     alert(text);
   };
 
-  renderAppleLeftActionMenu = (
+  /**
+   * Pass to Swipeable as the Left menu to render a single button Apple style menu.
+   *
+   * The menu acts as follows:
+   * 1) Dragging to the RHS past the menu open threshold causes it to spring open revealing the single button.
+   * 2) Continued rightwards dragging extends the menu, but the button stay on the LHS until the drag approaches
+   * the threshold for triggering the default action.
+   * 3) As the drag gets close the default action threshold the button animates rapidly rightwards giving the user a
+   * visual representation that the default action is about to be triggered.
+   * 4) The button continues rightward until it hits the trigger point whereupon it indicates to the user that the
+   * default will be triggered by ceasing to move any further right even as the rest of the menu continues to extend.
+   * 5) The menu is closed by either dragging to the LHS past the menu close threshold or by dragging past the trigger
+   * default action threshold.
+   */
+  leftAppleStyleActionMenuRender(
     progress: Animated.Value,
     dragX: Animated.Value
-  ) => {
+  ) {
     const dragXMenuClosed = 0;
     const dragXMenuOpen = ACTION_BTN_WIDTH;
     const xButtonMenuClosed = -ACTION_BTN_WIDTH;
@@ -99,23 +114,19 @@ export default class SwipeableRow extends React.Component<Props, State> {
 
     const colorButton = SWIPEABLE_LH_ACTION_BUTTONS[0].color;
     // noinspection UnnecessaryLocalVariableJS
-    const colorMenu = colorButton;
+    const colorMenu = colorButton; // Want background menu color the same as the only button color
     return (
       <View
         style={{
           flexDirection: "row",
           flex: 1,
-          backgroundColor: colorMenu,
-          borderColor: "black",
-          borderWidth: 1
+          backgroundColor: colorMenu
         }}
       >
         <Animated.View
           style={{
             width: ACTION_BTN_WIDTH,
             transform: [{ translateX: xForSingleActionButtonInsideMenu }]
-            // borderColor: "black",
-            // borderWidth: 1
           }}
         >
           <RectButton
@@ -137,9 +148,12 @@ export default class SwipeableRow extends React.Component<Props, State> {
         </Animated.View>
       </View>
     );
-  };
+  }
 
-  renderAppleRightActionMenu = (
+  /**
+   * Pass to Swipeable as the Right menu to render a single button Apple style action menu.
+   */
+  rightAppleStylelActionMenuRender = (
     progress: Animated.Value,
     dragX: Animated.Value
   ) => {
@@ -149,6 +163,7 @@ export default class SwipeableRow extends React.Component<Props, State> {
 
     const renderActionButton = (buttonConfigIdx: number) => {
       const buttonConfig = SWIPEABLE_RH_ACTION_BUTTONS[buttonConfigIdx];
+      const zIndex = SWIPEABLE_RH_ACTION_BUTTONS.length - buttonConfigIdx;
 
       console.debug("buttonConfig ", buttonConfig);
       const dragXMenuClosed = 0;
@@ -180,19 +195,28 @@ export default class SwipeableRow extends React.Component<Props, State> {
               // extrapolate: "clamp"
             });
 
-      // TODO: Working here, make button
+      const scaleXForActionButtonInsideMenu = dragX.interpolate({
+        inputRange: [-DEFAULT_ACTION_THRESHOLD, dragXMenuOpen, dragXMenuClosed],
+        outputRange: [
+          (DEFAULT_ACTION_THRESHOLD + dragXMenuOpen) / 3,
+          1,
+          1
+        ]
+      });
+
       return (
         <Animated.View
           style={{
-            minWidth: ACTION_BTN_WIDTH,
+            width: ACTION_BTN_WIDTH,
+            zIndex: zIndex,
             transform: [
               {
                 translateX: xForActionButtonInsideMenu
-              }
-              // { scaleX: scaleXForActionButtonInsideMenu }
-            ]
-            // borderColor: "black",
-            // borderWidth: 1
+              },
+              { scaleX: scaleXForActionButtonInsideMenu }
+            ],
+            borderColor: "black",
+            borderWidth: 1
           }}
         >
           <RectButton
@@ -215,23 +239,20 @@ export default class SwipeableRow extends React.Component<Props, State> {
 
     /* Three buttons and dragging from the RH to LHS*/
 
-    /* The menu's start location moves from a hidden lhs off-screen location to the start of the row container.
-     * Once there it start stops moving */
     return (
       <View
         style={{
-          // flex: 1,
-          flexDirection: "row",
+          flex: 1,
+          flexDirection: "row-reverse",
           borderColor: "black",
+          backgroundColor: "yellow",
           borderWidth: 1
           // width: ACTION_BTN_WIDTH * 3
         }}
       >
-        {/* Default button idx must be last in the list in order that _Both_ location AND maths work in call
-         to renderActionButton */}
-        {renderActionButton(SWIPEABLE_DEFAULT_ACTION_IDX + 2)}
-        {renderActionButton(SWIPEABLE_DEFAULT_ACTION_IDX + 1)}
-        {renderActionButton(SWIPEABLE_DEFAULT_ACTION_IDX)}
+        {renderActionButton(0)}
+        {renderActionButton(1)}
+        {renderActionButton(2)}
       </View>
     );
   };
@@ -248,10 +269,11 @@ export default class SwipeableRow extends React.Component<Props, State> {
     return (
       <Swipeable
         // animationOptions={{ stiffness: 20, damping: 50, bounciness: undefined }}
-        containerStyle={this.props.style}
+        containerStyle={this.props.rowContainer}
+        childrenContainerStyle={this.props.rowSwipedContent}
         ref={this.updateRef}
         friction={1}
-        renderLeftActions={this.renderAppleLeftActionMenu}
+        renderLeftActions={this.leftAppleStyleActionMenuRender}
         leftDefaultActionConfig={{
           onTrigger: () => {
             alert("Default Left action triggered");
@@ -260,7 +282,7 @@ export default class SwipeableRow extends React.Component<Props, State> {
           threshold: DEFAULT_ACTION_THRESHOLD,
           menuWidth: SWIPEABLE_LH_ACTION_BUTTONS.length * ACTION_BTN_WIDTH
         }}
-        renderRightActions={this.renderAppleRightActionMenu}
+        renderRightActions={this.rightAppleStylelActionMenuRender}
         rightDefaultActionConfig={{
           onTrigger: () => {
             alert("Default Right action triggered");
@@ -275,10 +297,12 @@ export default class SwipeableRow extends React.Component<Props, State> {
           style={styles.content}
           onPress={() => alert(this.props.dataItem.from)}
         >
-          <Text style={styles.fromText}>{this.props.dataItem.from}</Text>
-          <Text style={styles.dateText}>
-            {this.props.dataItem.when} {"❭"}
-          </Text>
+          <View style={styles.messageStatusLine}>
+            <Text style={styles.fromText}>{this.props.dataItem.from}</Text>
+            <Text style={styles.dateText}>
+              {this.props.dataItem.when} {"❭"}
+            </Text>
+          </View>
 
           <Text numberOfLines={3} style={styles.messageText}>
             {this.props.dataItem.message}
@@ -291,13 +315,11 @@ export default class SwipeableRow extends React.Component<Props, State> {
 
 const styleSheet: { [string]: ViewStyle | TextStyle } = {
   content: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    justifyContent: "space-between",
     flexDirection: "column",
-    backgroundColor: "orange",
-    height: 150
+    flex: 1,
+    padding: 10,
+    justifyContent: "space-between",
+    backgroundColor: "white"
   },
 
   messageStatusLine: {
@@ -321,10 +343,9 @@ const styleSheet: { [string]: ViewStyle | TextStyle } = {
   leftAction: {
     flex: 1,
     alignItems: "center",
-    justifyContent: "center",
-    borderColor: "black",
-    borderWidth: 2,
-    overflow: "hidden"
+    justifyContent: "center"
+    // borderColor: "black",
+    // borderWidth: 2,
   },
   rightAction: {
     flex: 1,
@@ -341,4 +362,87 @@ const styleSheet: { [string]: ViewStyle | TextStyle } = {
 
 const styles = StyleSheet.create(styleSheet);
 
-type Props = { dataItem: dataItem, style: ViewStyle };
+type Props = {
+  dataItem: dataItem,
+  rowContainer: ViewStyle,
+  rowSwipedContent: ViewStyle
+};
+
+//
+// /**
+//  * Pass to Swipeable as the Right menu to render a single button Apple style action menu.
+//  */
+// rightAppleStylelActionMenuRender = (
+//   progress: Animated.Value,
+//   dragX: Animated.Value
+// ) => {
+//   /*
+//    * render a single action button
+//    * */
+//
+//   const renderActionButton = (buttonConfigIdx: number) => {
+//     const buttonConfig = SWIPEABLE_RH_ACTION_BUTTONS[buttonConfigIdx];
+//
+//     console.debug("buttonConfig ", buttonConfig);
+//     const dragXMenuClosed = 0;
+//     const dragXMenuOpen =
+//       -SWIPEABLE_RH_ACTION_BUTTONS.length * ACTION_BTN_WIDTH;
+//
+//     const xButtonFromEndMenuOpen = 0;
+//     const xButtonFromEndMenuClosed = (buttonConfigIdx + 1) * ACTION_BTN_WIDTH;
+//     console.debug("offset = ", xButtonFromEndMenuOpen);
+//
+//     const xForActionButtonInsideMenu =
+//       buttonConfigIdx === SWIPEABLE_DEFAULT_ACTION_IDX
+//         ? dragX.interpolate({
+//           inputRange: [
+//             // -DEFAULT_ACTION_THRESHOLD,
+//             dragXMenuOpen,
+//             dragXMenuClosed
+//           ],
+//           outputRange: [
+//             // -DEFAULT_ACTION_THRESHOLD,
+//             xButtonFromEndMenuOpen,
+//             xButtonFromEndMenuClosed
+//           ]
+//           // extrapolate: "clamp"
+//         })
+//         : dragX.interpolate({
+//           inputRange: [dragXMenuOpen, dragXMenuClosed],
+//           outputRange: [xButtonFromEndMenuOpen, xButtonFromEndMenuClosed]
+//           // extrapolate: "clamp"
+//         });
+//
+//     return (
+//       <Animated.View
+//         style={{
+//           minWidth: ACTION_BTN_WIDTH,
+//           transform: [
+//             {
+//               translateX: xForActionButtonInsideMenu
+//             }
+//             // { scaleX: scaleXForActionButtonInsideMenu }
+//           ]
+//           // borderColor: "black",
+//           // borderWidth: 1
+//         }}
+//       >
+//         <RectButton
+//           style={{
+//             flex: 1,
+//             backgroundColor: buttonConfig.color,
+//             justifyContent: "center"
+//           }}
+//           onPress={() =>
+//             this.actionButtonPressHandler(
+//               `Pressed action button ${buttonConfig.text}`
+//             )
+//           }
+//         >
+//           <Text style={styles.actionText}>{buttonConfig.text}</Text>
+//         </RectButton>
+//       </Animated.View>
+//     );
+//   };
+//
+//

@@ -95,15 +95,19 @@ const TEST_DATA: Array<dataItem> = [
 ];
 
 const data = TEST_DATA;
-const rowHeight = 100;
+const rowHeight = 110;
 
 const App = () => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <SwipeableRow dataItem={data[0]} style={styles.row} />
+      <SwipeableRow
+        dataItem={data[0]}
+        rowContainer={styles.row}
+        rowSwipedContent={styles.rowContentSwiped}
+      />
     </SafeAreaView>
   );
-/*
+  /*
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
@@ -144,15 +148,20 @@ const App = () => {
 };
 
 const viewStyleRow: ViewStyle = {
-  display: "flex",
   height: rowHeight,
   flexDirection: "row",
-  alignItems: "center",
   opacity: 1,
   borderColor: "lightgrey",
-  borderWidth: 0.5,
-  backgroundColor: "white",
-  padding: 0,
+  borderTopWidth: 2,
+  borderBottomWidth: 2,
+  backgroundColor: "white"
+};
+
+// Handy for
+// $FlowFixMe - intentional left blank for debugging convenience.
+const viewStyleSwipedContainer: ViewStyle = {
+  // borderColor: "red",
+  // borderWidth: 2
 };
 
 const elevation = 10;
@@ -170,17 +179,11 @@ const viewStyleRowPlaceholderInList: ViewStyle = {
   opacity: 0 // Hide any text it contains so as not to conflict with what's being dragged.
 };
 
-const viewStyleSwipeable: ViewStyle = {
-  flex: 1,
-  height: "100%",
-  padding: 10
-};
-
 const styles = StyleSheet.create({
   row: viewStyleRow,
+  rowContentSwiped: viewStyleSwipedContainer,
   rowDragging: viewStyleRowBeingDragged,
-  rowPlaceholder: viewStyleRowPlaceholderInList,
-  swipeable: viewStyleSwipeable
+  rowPlaceholder: viewStyleRowPlaceholderInList
 });
 
 export default App;

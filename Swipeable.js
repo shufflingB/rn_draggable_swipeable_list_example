@@ -12,6 +12,10 @@ import {
   TapGestureHandler,
   State
 } from "react-native-gesture-handler/GestureHandler";
+import type {
+  TextStyle,
+  ViewStyle
+} from "react-native/Libraries/StyleSheet/StyleSheet";
 
 const DRAG_TOSS = 0.05;
 
@@ -271,12 +275,19 @@ export default class Swipeable extends Component<PropType, StateType> {
           translationX < -rightDefaultActionConfig.threshold &&
           (this._defaultActionTriggered = -1);
 
-        xAnimateToOffset = this._defaultActionTriggered
+        console.debug(
+          "this._defaultActionTriggered ",
+          this._defaultActionTriggered,
+          " Truthy ",
+          !!this._defaultActionTriggered
+        );
+
+        xAnimateToOffset = !!this._defaultActionTriggered
           ? 0
           : translationX > leftThreshold
           ? leftMenuWidth // Open left menu
           : translationX < -rightThreshold
-          ? -rightFullWidth // Open right menu
+          ? -rightMenuWidth // Open right menu
           : 0;
 
         break;
@@ -483,7 +494,7 @@ export default class Swipeable extends Component<PropType, StateType> {
       >
         <Animated.View
           onLayout={this._onRowLayout}
-          style={[styles.container, this.props.containerStyle]}
+          style={[styles.rowContainer, this.props.containerStyle]}
         >
           {left}
           {right}
@@ -497,6 +508,7 @@ export default class Swipeable extends Component<PropType, StateType> {
                 {
                   transform: [{ translateX: this._transX }]
                 },
+                styles.rowSwipedContent,
                 this.props.childrenContainerStyle
               ]}
             >
@@ -508,10 +520,15 @@ export default class Swipeable extends Component<PropType, StateType> {
     );
   }
 }
+type foo = { [string]: ViewStyle | TextStyle };
 
 const styles = StyleSheet.create({
-  container: {
+  rowContainer: {
     overflow: "hidden"
+  },
+  rowSwipedContent: {
+    width: "100%",
+    height: "100%"
   },
   leftActions: {
     ...StyleSheet.absoluteFillObject,
