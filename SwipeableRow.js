@@ -2,16 +2,15 @@
 import * as React from "react";
 import { Animated, StyleSheet, Text, View, Easing } from "react-native";
 
-import { RectButton } from "react-native-gesture-handler";
+// import Swipeable from "./Swipeable";
+import { RectButton, Swipeable } from "react-native-gesture-handler";
 
-import Swipeable from "./Swipeable";
 import type { dataItem } from "./App";
 import type {
   TextStyle,
   ViewStyle
 } from "react-native/Libraries/StyleSheet/StyleSheet";
 import { widthPercentageToDP } from "react-native-responsive-screen";
-import { AnimatedValue } from "react-native-reanimated";
 
 /* How wide to make each action menu button in pts. This is used to derive the overall action menu widths etc
  *  For buttons X, then aim for X * ACTION_BTN_WIDTH to come out around about 60% screen width to enable dragging
@@ -88,7 +87,6 @@ export default class SwipeableRow extends React.Component<Props, State> {
    * default will be triggered by ceasing to move any further right even as the rest of the menu continues to extend.
    * 5) The menu is closed by either dragging to the LHS past the menu close threshold or by dragging past the trigger
    * default action threshold.
-   *
    *
    */
 
