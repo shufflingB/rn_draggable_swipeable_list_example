@@ -1,11 +1,12 @@
 // @flow
 
 import * as React from "react";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { SafeAreaView, StyleSheet, View } from "react-native";
 import { SortableList } from "./SortableList";
 import SwipeableRow from "./SwipeableRow";
 import type { ViewStyle } from "react-native/Libraries/StyleSheet/StyleSheet";
 import IconIonicons from "react-native-vector-icons/Ionicons";
+import { widthPercentageToDP } from "react-native-responsive-screen";
 
 export type dataItem = {
   from: string,
@@ -103,7 +104,7 @@ const App = () => {
     <SafeAreaView style={{ flex: 1 }}>
       <SwipeableRow
         dataItem={data[0]}
-        rowContainer={styles.row}
+        rowContent={styles.row}
         rowSwipedContent={styles.rowContentSwiped}
       />
     </SafeAreaView>
@@ -116,7 +117,6 @@ const App = () => {
         onSort={x => console.log(x)}
         rowHeight={rowHeight}
         indexToKey={idx => idx.toString()}
-        // renderDragHandle={() => <Text style={{ fontSize: 32 }}>@</Text>}
         renderDragHandle={() => (
           <IconIonicons name="ios-reorder" size={30} color="lightgrey" />
         )}
@@ -130,18 +130,18 @@ const App = () => {
             <View
               style={
                 dataItemState === "dragging"
-                  ? styles.rowDragging
+                  ? styles.rowBeingDragged
                   : dataItemState === "placeholder"
-                  ? styles.rowPlaceholder
+                  ? styles.rowPlaceholderInList
                   : styles.row
               }
             >
+              <View style={styles.dragHandle}>{dataItemDragHandle}</View>
               <SwipeableRow
                 dataItem={dataItem}
-                rowContainer={styles.row}
-                rowSwipedContent={styles.rowContentSwiped}
+                rowContent={styles.content}
+                rowSwipedContent={styles.contentSwiped}
               />
-              {dataItemDragHandle}
             </View>
           );
         }}
@@ -150,27 +150,26 @@ const App = () => {
   );
 };
 
-const viewStyleRow: ViewStyle = {
+const vsRow: ViewStyle = {
   height: rowHeight,
   flexDirection: "row",
+  flex: 1,
+  justifyContent: "space-around",
   opacity: 1,
   borderColor: "lightgrey",
-  borderTopWidth: 2,
-  borderBottomWidth: 2,
+  borderTopWidth: 1,
+  // borderBottomWidth: 2,
   backgroundColor: "white"
 };
 
-// Handy for
-// $FlowFixMe - intentional left blank for debugging convenience.
-const viewStyleSwipedContainer: ViewStyle = {
-  height: "100%"
-  // borderColor: "red",
-  // borderWidth: 2
+const vsRowPlaceholderInList: ViewStyle = {
+  ...vsRow,
+  opacity: 0 // Hide any text it contains so as not to conflict with what's being dragged.
 };
 
 const elevation = 10;
-const viewStyleRowBeingDragged: ViewStyle = {
-  ...viewStyleRow,
+const vsRowBeingDragged: ViewStyle = {
+  ...vsRow,
   shadowColor: "black",
   shadowOffset: { width: 0, height: 0.5 * elevation },
   shadowOpacity: 0.3,
@@ -178,16 +177,34 @@ const viewStyleRowBeingDragged: ViewStyle = {
   opacity: 1
 };
 
-const viewStyleRowPlaceholderInList: ViewStyle = {
-  ...viewStyleRow,
-  opacity: 0 // Hide any text it contains so as not to conflict with what's being dragged.
+const vsDragHandle: ViewStyle = {
+  width: widthPercentageToDP(10),
+  justifyContent: "center",
+  alignContent: "center",
+  paddingLeft: 10
+  // borderColor: "green",
+  // borderWidth: 2
+};
+
+const vsContent: ViewStyle = {
+  height: "100%",
+  width: widthPercentageToDP(90)
+  // borderColor: "red",
+  // borderWidth: 2
+};
+
+const vsContentSwiped: ViewStyle = {
+  ...vsContent
+  // borderColor: "blue"
 };
 
 const styles = StyleSheet.create({
-  row: viewStyleRow,
-  rowContentSwiped: viewStyleSwipedContainer,
-  rowDragging: viewStyleRowBeingDragged,
-  rowPlaceholder: viewStyleRowPlaceholderInList
+  row: vsRow,
+  rowPlaceholderInList: vsRowPlaceholderInList,
+  rowBeingDragged: vsRowBeingDragged,
+  dragHandle: vsDragHandle,
+  content: vsContent,
+  contentSwiped: vsContentSwiped
 });
 
 export default App;

@@ -1,15 +1,11 @@
 // @flow
 import * as React from "react";
-import { Animated, StyleSheet, Text, View, Easing } from "react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 
-// import Swipeable from "./Swipeable";
-import { RectButton, Swipeable } from "react-native-gesture-handler";
+import { Swipeable, RectButton } from "react-native-gesture-handler";
 
 import type { dataItem } from "./App";
-import type {
-  TextStyle,
-  ViewStyle
-} from "react-native/Libraries/StyleSheet/StyleSheet";
+import type { ViewStyle } from "react-native/Libraries/StyleSheet/StyleSheet";
 import { widthPercentageToDP } from "react-native-responsive-screen";
 
 /* How wide to make each action menu button in pts. This is used to derive the overall action menu widths etc
@@ -69,10 +65,10 @@ export default class SwipeableRow extends React.Component<Props, State> {
 
   _swipeableRowRef: Swipeable | null;
 
-  actionButtonPressHandler = (text: string) => {
+  actionButtonPressHandler(text: string) {
     this.close();
     alert(text);
-  };
+  }
 
   /**
    * Pass to Swipeable as the Left menu to render a single button Apple style menu.
@@ -90,16 +86,12 @@ export default class SwipeableRow extends React.Component<Props, State> {
    *
    */
 
-  leftAppleStyleActionMenuRender(
+  leftAppleStyleActionMenuRender = (
     progress: Animated.Value,
     dragX: Animated.Value
-  ) {
+  ) => {
     const screenWidth = widthPercentageToDP(100);
     const dragXMenuClosed = 0;
-    const dragXMenuOpen = ACTION_BTN_WIDTH;
-
-    const xButtonMenuClosed = -ACTION_BTN_WIDTH;
-    const xButtonMenuOpen = 0;
 
     /* The single button inside the menu container  starts, and stays flush against the lhs of the menu until just before
      * the default threshold is triggered. When it hits that "just before point", then it moves to the right
@@ -143,6 +135,7 @@ export default class SwipeableRow extends React.Component<Props, State> {
               backgroundColor: colorButton,
               justifyContent: "center"
             }}
+            // onPress={this.actionButtonPressHandler.bind(this, "FART")}
             onPress={() =>
               this.actionButtonPressHandler(
                 `Pressed action button ${SWIPEABLE_LH_ACTION_BUTTONS[0].text}`
@@ -156,7 +149,7 @@ export default class SwipeableRow extends React.Component<Props, State> {
         </Animated.View>
       </View>
     );
-  }
+  };
 
   /*
    *
@@ -229,6 +222,7 @@ export default class SwipeableRow extends React.Component<Props, State> {
               backgroundColor: buttonConfig.color,
               justifyContent: "center"
             }}
+            // onPress={this.actionButtonPressHandler.bind(this, "FART")}
             onPress={() =>
               this.actionButtonPressHandler(
                 `Pressed action button ${buttonConfig.text}`
@@ -271,8 +265,7 @@ export default class SwipeableRow extends React.Component<Props, State> {
   render() {
     return (
       <Swipeable
-        // animationOptions={{ stiffness: 20, damping: 50, bounciness: undefined }}
-        containerStyle={this.props.rowContainer}
+        containerStyle={this.props.rowContent}
         childrenContainerStyle={this.props.rowSwipedContent}
         ref={this.updateRef}
         friction={1}
@@ -297,17 +290,17 @@ export default class SwipeableRow extends React.Component<Props, State> {
         useNativeAnimations={true}
       >
         <RectButton
-          style={styles.content}
+          style={styles.mesgContainer}
           onPress={() => alert(this.props.dataItem.from)}
         >
-          <View style={styles.messageStatusLine}>
-            <Text style={styles.fromText}>{this.props.dataItem.from}</Text>
-            <Text style={styles.dateText}>
+          <View style={styles.mesgStatusLine}>
+            <Text style={styles.mesgFromText}>{this.props.dataItem.from}</Text>
+            <Text style={styles.mesgDateText}>
               {this.props.dataItem.when} {"❭"}
             </Text>
           </View>
 
-          <Text numberOfLines={3} style={styles.messageText}>
+          <Text numberOfLines={3} style={styles.mesgText}>
             {this.props.dataItem.message}
           </Text>
         </RectButton>
@@ -316,8 +309,9 @@ export default class SwipeableRow extends React.Component<Props, State> {
   }
 }
 
-const styleSheet: { [string]: ViewStyle | TextStyle } = {
-  content: {
+const styles = StyleSheet.create({
+  mesgContainer: {
+    width: "100%",
     flexDirection: "column",
     flex: 1,
     padding: 10,
@@ -325,21 +319,21 @@ const styleSheet: { [string]: ViewStyle | TextStyle } = {
     backgroundColor: "white"
   },
 
-  messageStatusLine: {
+  mesgStatusLine: {
     flex: 1,
     flexDirection: "row",
     justifyContent: "space-between"
   },
-  fromText: {
+  mesgFromText: {
     fontWeight: "bold",
     backgroundColor: "transparent"
   },
-  dateText: {
+  mesgDateText: {
     backgroundColor: "transparent",
     color: "#999",
     fontWeight: "bold"
   },
-  messageText: {
+  mesgText: {
     color: "#999",
     backgroundColor: "transparent"
   },
@@ -361,12 +355,10 @@ const styleSheet: { [string]: ViewStyle | TextStyle } = {
     backgroundColor: "transparent",
     padding: 10
   }
-};
-
-const styles = StyleSheet.create(styleSheet);
+});
 
 type Props = {
   dataItem: dataItem,
-  rowContainer: ViewStyle,
+  rowContent: ViewStyle,
   rowSwipedContent: ViewStyle
 };

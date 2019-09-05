@@ -291,9 +291,10 @@ export class SortableList<T> extends React.PureComponent<Props<T>, RState> {
 
         {/* If we are not dragging then render list as normal.
         If we are dragging then we render:
-           1) The list but with the row that is being dragged as the background colour, our case white.
+           1) The list but with the row that is being dragged as the background colour, our case white, so as to
+           obscure what is currently at the location and not conflict with what's in the annimated view on top.
            2) The row that is being dragged in its own view ontop of the list, i.e. absolute and
-           with a zIndex > than the list
+           with a zIndex > than the list behind it.
         */}
         {this.state.isDraggingRow ? (
           <Animated.View
