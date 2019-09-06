@@ -4273,8 +4273,9 @@ react-is@^16.8.1, react-is@^16.8.4:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.9.0.tgz#21ca9561399aad0ff1a7701c01683e8ca981edcb"
   integrity sha512-tJBzzzIgnnRfEm046qRcURvwQnZVXmuCbscxUO5RWrGTXpon2d4c8mI0D8WE6ydVIm29JiLB6+RslkIvym9Rjw==
 
-"react-native-gesture-handler@file:../../../GitHubLibs/react-native-gesture-handler":
+react-native-gesture-handler@shufflingB/react-native-gesture-handler#swipeable_ios_default_thresholds:
   version "1.4.1"
+  resolved "https://codeload.github.com/shufflingB/react-native-gesture-handler/tar.gz/a151d46f1db08c7f9d8c6bf4741bd88f4addb56b"
   dependencies:
     hammerjs "^2.0.8"
     hoist-non-react-statics "^2.3.1"
