@@ -1,6 +1,6 @@
 ## Intro
 
-This is an ios app that demonstrates handling of both draggable and swipeable rows within a list in a way similar to how apps on ios, such as Mail and Reminders do. I put it together as a learning exercise because I couldn't find anything existing that did what I was after. 
+This is an ios app that demonstrates handling of both draggable and swipeable rows within a list in a way similar to how apps on ios, such as Mail and Reminders do. I put it together as a learning exercise because I couldn't find anything existing that handled the default action animation correctly. 
 
 ![Dragging](assets/dragging_row_animation.png)![Swiped_open](assets/swiped_open_action_menu.png)![Default](assets/default_action_animation.png)
 
